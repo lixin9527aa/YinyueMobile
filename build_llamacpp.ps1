@@ -77,7 +77,7 @@ if ($LASTEXITCODE -ne 0) { exit 1 }
 
 # 5. Build (only shared libraries, skip executables)
 Write-Host "Building ggml + llama shared libs..." -ForegroundColor Yellow
-& cmake --build $BUILD_DIR --config Release --target ggml llama -j $env:NUMBER_OF_PROCESSORS
+& cmake --build $BUILD_DIR --config Release --target ggml llama mtmd -j $env:NUMBER_OF_PROCESSORS
 if ($LASTEXITCODE -ne 0) { exit 1 }
 
 # 6. Copy .so files
