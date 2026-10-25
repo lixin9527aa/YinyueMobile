@@ -48,6 +48,7 @@ $cmakeArgs = @(
     "-DBUILD_SHARED_LIBS=ON",
     "-DMNN_BUILD_SHARED_LIBS=ON",
     "-DMNN_ARM82=ON",
+    "-DMNN_BUILD_LLM=ON",
     "-DMNN_LLM_BUILD_DEMO=OFF"
 )
 
