@@ -17,21 +17,20 @@ jobs:
         shell: pwsh
         run: |
           $sdk = $env:ANDROID_HOME
-          Write-Host "ANDROID_HOME=$sdk"
           $sm = Join-Path $sdk "cmdline-tools\latest\bin\sdkmanager.bat"
           if (-not (Test-Path $sm)) {
             $found = Get-ChildItem "$sdk\cmdline-tools" -Recurse -Filter sdkmanager.bat -ErrorAction SilentlyContinue | Select-Object -First 1
             if ($found) { $sm = $found.FullName }
           }
-          Write-Host "sdkmanager=$sm"
           & $sm "ndk;27.0.12077973" "cmake;3.22.1"
-
           New-Item -ItemType Directory -Force -Path "$env:LOCALAPPDATA\Android" | Out-Null
           $link = "$env:LOCALAPPDATA\Android\Sdk"
           if (Test-Path $link) { Remove-Item $link -Recurse -Force }
           New-Item -ItemType Junction -Path $link -Target $sdk | Out-Null
-          Write-Host "--- ndk under link ---"
-          Get-ChildItem "$link\ndk" -ErrorAction SilentlyContinue
+
+      - name: Ensure jniLibs dir exists
+        shell: pwsh
+        run: New-Item -ItemType Directory -Force -Path "app/src/main/jniLibs/arm64-v8a" | Out-Null
 
       - name: Build MNN native libs
         shell: pwsh
