@@ -13,10 +13,21 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Install NDK and CMake
+      - name: Locate Android SDK
         run: |
+          export ANDROID_HOME="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          export ANDROID_SDK_ROOT="$ANDROID_HOME"
+          export PATH="$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/tools/bin"
           echo "ANDROID_HOME=$ANDROID_HOME"
-          yes | sdkmanager --licenses > /dev/null 2>&1 || true
+          echo "--- cmdline-tools ---"
+          ls "$ANDROID_HOME/cmdline-tools" || true
+          echo "--- which sdkmanager ---"
+          which sdkmanager || echo "NOT FOUND"
+          echo "--- existing ndk ---"
+          ls "$ANDROID_HOME/ndk" 2>/dev/null || echo "no ndk yet"
+          echo "--- pwsh ---"
+          which pwsh || echo "no pwsh"
+          yes | sdkmanager --licenses >/dev/null 2>&1 || true
           sdkmanager "ndk;27.0.12077973" "cmake;3.22.1"
 
       - uses: gradle/actions/setup-gradle@v3
