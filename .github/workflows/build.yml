@@ -4,7 +4,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -13,32 +13,32 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Locate Android SDK
+      - name: Install NDK 27 and link SDK path
+        shell: pwsh
         run: |
-          export ANDROID_HOME="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
-          export ANDROID_SDK_ROOT="$ANDROID_HOME"
-          export PATH="$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/tools/bin"
-          echo "ANDROID_HOME=$ANDROID_HOME"
-          echo "--- cmdline-tools ---"
-          ls "$ANDROID_HOME/cmdline-tools" || true
-          echo "--- which sdkmanager ---"
-          which sdkmanager || echo "NOT FOUND"
-          echo "--- existing ndk ---"
-          ls "$ANDROID_HOME/ndk" 2>/dev/null || echo "no ndk yet"
-          echo "--- pwsh ---"
-          which pwsh || echo "no pwsh"
-          yes | sdkmanager --licenses >/dev/null 2>&1 || true
-          sdkmanager "ndk;27.0.12077973" "cmake;3.22.1"
+          $sdk = $env:ANDROID_HOME
+          Write-Host "ANDROID_HOME=$sdk"
+          $sm = Join-Path $sdk "cmdline-tools\latest\bin\sdkmanager.bat"
+          if (-not (Test-Path $sm)) {
+            $found = Get-ChildItem "$sdk\cmdline-tools" -Recurse -Filter sdkmanager.bat -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($found) { $sm = $found.FullName }
+          }
+          Write-Host "sdkmanager=$sm"
+          & $sm "ndk;27.0.12077973" "cmake;3.22.1"
 
-      - uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-version: '8.7'
+          New-Item -ItemType Directory -Force -Path "$env:LOCALAPPDATA\Android" | Out-Null
+          $link = "$env:LOCALAPPDATA\Android\Sdk"
+          if (Test-Path $link) { Remove-Item $link -Recurse -Force }
+          New-Item -ItemType Junction -Path $link -Target $sdk | Out-Null
+          Write-Host "--- ndk under link ---"
+          Get-ChildItem "$link\ndk" -ErrorAction SilentlyContinue
 
       - name: Build MNN native libs
-        run: pwsh -NoProfile -File build_mnn.ps1
+        shell: pwsh
+        run: .\build_mnn.ps1
 
       - name: Assemble debug APK
-        run: gradle assembleDebug --no-daemon --stacktrace
+        run: .\gradlew.bat assembleDebug --no-daemon --stacktrace
 
       - uses: actions/upload-artifact@v4
         if: always()
