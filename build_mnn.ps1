@@ -100,5 +100,14 @@ if ($cppShared) {
 }
 
 Write-Host ""
+# auto-copy every produced .so (SEP_BUILD splits into libMNN_Express etc.)
+Get-ChildItem $BUILD_DIR -Recurse -Filter "*.so" | ForEach-Object {
+    $dest = Join-Path $JNILIBS $_.Name
+    if (-not (Test-Path $dest)) {
+        Copy-Item $_.FullName $dest -Force
+        Write-Host "Copied $($_.Name) (auto)" -ForegroundColor Green
+    }
+}
+
 Write-Host "=== MNN + LLM build complete ===" -ForegroundColor Cyan
 
