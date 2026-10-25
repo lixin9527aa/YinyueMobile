@@ -36,13 +36,22 @@ jobs:
         shell: pwsh
         run: .\build_mnn.ps1
 
+      - name: Sweep ALL MNN .so into jniLibs
+        shell: pwsh
+        run: |
+          $dst = "app/src/main/jniLibs/arm64-v8a"
+          Get-ChildItem -Path "MNN/build-android-arm64" -Recurse -Filter *.so -ErrorAction SilentlyContinue |
+            Where-Object { $_.FullName -notmatch "CMakeFiles" } |
+            ForEach-Object {
+              Copy-Item $_.FullName (Join-Path $dst $_.Name) -Force
+              Write-Host "copied $($_.Name)"
+            }
+          Write-Host "--- jniLibs now ---"
+          Get-ChildItem $dst | Select-Object Name, Length
+
       - name: Build llama.cpp native libs
         shell: pwsh
         run: .\build_llamacpp.ps1
-
-      - name: List jniLibs
-        shell: pwsh
-        run: Get-ChildItem "app/src/main/jniLibs/arm64-v8a" | Select-Object Name, Length
 
       - name: Assemble debug APK
         run: .\gradlew.bat assembleDebug --no-daemon --stacktrace
