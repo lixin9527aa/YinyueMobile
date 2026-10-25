@@ -36,6 +36,14 @@ jobs:
         shell: pwsh
         run: .\build_mnn.ps1
 
+      - name: Build llama.cpp native libs
+        shell: pwsh
+        run: .\build_llamacpp.ps1
+
+      - name: List jniLibs
+        shell: pwsh
+        run: Get-ChildItem "app/src/main/jniLibs/arm64-v8a"
+
       - name: Assemble debug APK
         run: .\gradlew.bat assembleDebug --no-daemon --stacktrace
 
